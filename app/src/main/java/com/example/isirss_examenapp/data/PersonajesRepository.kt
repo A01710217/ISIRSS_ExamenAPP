@@ -7,4 +7,6 @@ class PersonajesRepository {
     private val apiDragonBall = PersonajesAPIClient()
 
     suspend fun getPersonajesList(limit : Int): PersonajesObject? = apiDragonBall.getPersonajesList(limit)
+
+    suspend fun buscarPersonaje(nombre : String) = apiDragonBall.buscarPersonaje(nombre)
 }

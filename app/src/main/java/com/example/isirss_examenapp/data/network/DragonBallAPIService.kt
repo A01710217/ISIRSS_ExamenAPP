@@ -1,5 +1,6 @@
 package com.example.isirss_examenapp.data.network
 
+import com.example.isirss_examenapp.data.network.model.PersonajesBase
 import com.example.isirss_examenapp.data.network.model.PersonajesObject
 import com.example.isirss_examenapp.data.network.model.PlanetasObject
 import retrofit2.http.GET
@@ -19,4 +20,10 @@ interface DragonBallAPIService {
     suspend fun getPlanetasList(
         @Query("limit") limit:Int
     ): PlanetasObject //Metodo Post para obtener la lista de planetas
+
+    //https://dragonball-api.com/api/characters?name=Goku
+    @GET("characters")
+    suspend fun buscarPersonaje(
+        @Query("name") name: String
+    ): List<PersonajesBase>
 }
