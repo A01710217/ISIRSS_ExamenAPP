@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
@@ -14,30 +13,21 @@ import com.example.isirss_examenapp.data.network.model.PersonajesBase
 import com.example.isirss_examenapp.databinding.FragmentPersonajesBinding
 import com.example.isirss_examenapp.framework.adapter.PersonajesAdapter
 import com.example.isirss_examenapp.framework.viewmodel.PersonajesViewModel
-import kotlinx.coroutines.Job
 
 class PersonajesFragment : Fragment() {
     private var _binding: FragmentPersonajesBinding? = null
-
-    // Esta propiedad es sólo válida entre onCreateView y onDestroyView.
     private val binding get() = _binding!!
-
     private lateinit var viewModel: PersonajesViewModel
     private lateinit var recyclerView: RecyclerView
     private val adapter: PersonajesAdapter = PersonajesAdapter()
-    private lateinit var data: ArrayList<PersonajesBase>
+    private var isLoading = false // Variable para evitar cargas múltiples
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         viewModel = ViewModelProvider(this)[PersonajesViewModel::class.java]
-
         _binding = FragmentPersonajesBinding.inflate(inflater, container, false)
         val root: View = binding.root
-
-        data = ArrayList()
 
         initializeComponents(root)
         initializeObservers()
@@ -46,34 +36,43 @@ class PersonajesFragment : Fragment() {
         // Búsqueda
         binding.searchView.setOnQueryTextListener(
             object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
-
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null && query.isNotEmpty()) {
-                    showLoading() // Mostrar barra de progreso
-                    viewModel.searchPersonajeByName(query) // Invoca el método de búsqueda
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    if (query != null && query.isNotEmpty()) {
+                        showLoading()
+                        viewModel.searchPersonajeByName(query)
+                        hideLoading()
+                        isLoading = true
+                    }
+                    return true
                 }
-                return true
-            }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                return true
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    return true
+                }
+            })
 
         return root
     }
 
     private fun setUpRecyclerView(dataForList: ArrayList<PersonajesBase>) {
         recyclerView.setHasFixedSize(true)
-        val gridLayoutManager = GridLayoutManager(
-            requireContext(),
-            2,
-            GridLayoutManager.VERTICAL,
-            false
-        )
+        val gridLayoutManager = GridLayoutManager(requireContext(), 2)
         recyclerView.layoutManager = gridLayoutManager
         adapter.PersonajesAdapter(dataForList, requireContext())
         recyclerView.adapter = adapter
+
+        // Añadir ScrollListener para detectar el final del RecyclerView
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (!recyclerView.canScrollVertically(1) && !isLoading) {
+                    // Si no se puede hacer scroll más abajo y no estamos cargando
+                    isLoading = true
+                    showLoading()
+                    viewModel.getPersonajesList() // Cargar más personajes
+                }
+            }
+        })
     }
 
     private fun initializeComponents(root: View) {
@@ -81,26 +80,25 @@ class PersonajesFragment : Fragment() {
     }
 
     private fun initializeObservers() {
+        // Cargar nueva paginacion cuando se llegue al final del RecyclerView
         viewModel.personajesObjectLiveData.observe(viewLifecycleOwner) { personajeObject ->
             hideLoading() // Ocultar barra de progreso
             setUpRecyclerView(personajeObject.items)
+            isLoading = false
         }
 
-        // Observador para los resultados de búsqueda
-        viewModel.personajesSearchResultLiveData.observe(viewLifecycleOwner) { personajesList ->
+        viewModel.personajesSearchResultLiveData.observe(viewLifecycleOwner) { personajes ->
             hideLoading() // Ocultar barra de progreso
-            setUpRecyclerView(ArrayList(personajesList)) // Convierte a ArrayList
+            setUpRecyclerView(personajes as ArrayList<PersonajesBase>)
         }
     }
 
     private fun showLoading() {
-        binding.progressBar.visibility = View.VISIBLE // Mostrar la barra de progreso
-        binding.RVPersonajes.visibility = View.GONE // Ocultar RecyclerView mientras se carga
+        binding.progressBar.visibility = View.VISIBLE
     }
 
     private fun hideLoading() {
-        binding.progressBar.visibility = View.GONE // Ocultar la barra de progreso
-        binding.RVPersonajes.visibility = View.VISIBLE // Mostrar RecyclerView
+        binding.progressBar.visibility = View.GONE
     }
 
     override fun onDestroyView() {

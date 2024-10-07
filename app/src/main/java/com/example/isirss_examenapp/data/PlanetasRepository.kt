@@ -6,5 +6,5 @@ import com.example.isirss_examenapp.data.network.model.PlanetasObject
 class PlanetasRepository {
     private val apiPlanetas = PlanetasAPIClient()
 
-    suspend fun getPlanetasList(limit : Int): PlanetasObject? = apiPlanetas.getPlanetasList(limit)
+    suspend fun getPlanetasList(page : Int, limit : Int): PlanetasObject? = apiPlanetas.getPlanetasList(page, limit)
 }

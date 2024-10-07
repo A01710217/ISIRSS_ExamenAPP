@@ -20,17 +20,24 @@ class PersonajesViewModel : ViewModel() {
     private val personajesListRequirement = PersonajesListRequirement()
     private val buscarPersonajeRequirement = BuscarPersonajesrequirement()
 
-    // Método para obtener la lista de personajes con límite
+    private val personajesList = ArrayList<PersonajesBase>()
+    private var currentPage = 1
+    private val limit = 20
+
+    // Método para obtener la lista de personajes con paginación
     fun getPersonajesList() {
         viewModelScope.launch(Dispatchers.IO) {
-            val result: PersonajesObject? = personajesListRequirement(10)
+            val result: PersonajesObject? = personajesListRequirement(currentPage, limit)
             Log.d("PersonajesViewModel", "Personajes: $result")
             CoroutineScope(Dispatchers.Main).launch {
                 if (result != null) {
-                    personajesObjectLiveData.postValue(result!!)
+                    personajesList.clear() // Limpia la lista existente
+                    personajesList.addAll(result.items) // Agrega los nuevos resultados
+                    personajesObjectLiveData.postValue(result!!) // Actualiza la lista en el LiveData
+                    currentPage++ // Incrementa la página para la siguiente carga
+                    Log.d("PersonajesViewModel", "Pagina: ${currentPage}")
                 } else {
                     Log.e("PersonajesViewModel", "El resultado es nulo")
-                    // Manejo del caso nulo
                 }
             }
         }
