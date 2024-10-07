@@ -6,7 +6,8 @@ import com.example.isirss_examenapp.data.network.model.PlanetasObject
 class PlanetasListRequirement {
     private val planetasRepository = PlanetasRepository()
     suspend operator fun invoke(
+        page:Int,
         limit:Int
-    ): PlanetasObject? = planetasRepository.getPlanetasList(limit)
+    ): PlanetasObject? = planetasRepository.getPlanetasList(page, limit)
 
 }

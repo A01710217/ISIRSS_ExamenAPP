@@ -7,6 +7,7 @@ class PersonajesListRequirement {
     private val personajesRepository = PersonajesRepository()
 
     suspend operator fun invoke(
+        page:Int,
         limit:Int
-    ): PersonajesObject? = personajesRepository.getPersonajesList(limit)
+    ): PersonajesObject? = personajesRepository.getPersonajesList(page, limit)
 }

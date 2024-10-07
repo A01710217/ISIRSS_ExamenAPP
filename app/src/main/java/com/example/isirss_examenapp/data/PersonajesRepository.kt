@@ -6,5 +6,7 @@ import com.example.isirss_examenapp.data.network.model.PersonajesObject
 class PersonajesRepository {
     private val apiDragonBall = PersonajesAPIClient()
 
-    suspend fun getPersonajesList(limit : Int): PersonajesObject? = apiDragonBall.getPersonajesList(limit)
+    suspend fun getPersonajesList(page : Int, limit : Int): PersonajesObject? = apiDragonBall.getPersonajesList(page, limit)
+
+    suspend fun buscarPersonaje(nombre : String) = apiDragonBall.buscarPersonaje(nombre)
 }
