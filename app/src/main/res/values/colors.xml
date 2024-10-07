@@ -9,5 +9,8 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Mis colores -->
+    <color name="primary">#242c34 </color>
     <color name="cremita">#fcf4dc</color>
+    <color name="semiWhite">#f5f5f5</color>
+
 </resources>
