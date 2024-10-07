@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.isirss_examenapp.data.network.model.PersonajesBase
+import com.example.isirss_examenapp.data.network.model.PlanetasBase
 import com.example.isirss_examenapp.data.network.model.PlanetasObject
 import com.example.isirss_examenapp.domain.PlanetasListRequirement
 import kotlinx.coroutines.CoroutineScope
@@ -13,24 +15,24 @@ import kotlinx.coroutines.launch
 class PlanetasViewModel : ViewModel() {
 
     val planetasObjectLiveData = MutableLiveData<PlanetasObject>()
-    private val planetasListRequirement = PlanetasListRequirement()
-    private var currentOffset = 0
+    private val planetasListRequirement = ArrayList<PlanetasBase>()
+    private var currentPage = 1
     private val limit = 20
 
     fun getPlanetasList(loadMore: Boolean = false) {
-        if (loadMore) {
-            currentOffset += limit // Incrementar el offset para cargar más datos
-        } else {
-            currentOffset = 0 // Reiniciar el offset si es una nueva búsqueda
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
-            val result: PlanetasObject? = planetasListRequirement(currentOffset, limit)
+            val result: PlanetasObject? = PlanetasListRequirement()(currentPage, limit)
             Log.d("PlanetasViewModel", "Planetas: $result")
+
             CoroutineScope(Dispatchers.Main).launch {
                 if (result != null) {
-                    // Actualiza el LiveData con la nueva lista de planetas
-                    planetasObjectLiveData.postValue(result!!)
+                    if (!loadMore) {
+                        planetasListRequirement.clear() // Limpia la lista existente
+                    }
+                    planetasListRequirement.addAll(result.items) // Agrega los nuevos resultados
+                    planetasObjectLiveData.postValue(result!!) // Actualiza la lista en el LiveData
+                    currentPage++ // Incrementa la página para la siguiente carga
+                    Log.d("PlanetasViewModel", "Pagina: ${currentPage}")
                 } else {
                     Log.e("PlanetasViewModel", "El resultado es nulo")
                 }
